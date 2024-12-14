@@ -1,0 +1,95 @@
+#Generacion de monopolos en hielo de spin
+
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+import matplotlib.animation as animation
+
+# Configuración inicial del hielo de spin
+def initialize_spin_ice(grid_size):
+    """
+    Inicializa una red cuadrada para el hielo de spin con configuraciones aleatorias.
+    """
+    spin_ice = np.random.choice([-1, 1], size=(grid_size, grid_size, 2))  # Spines en x y y
+    return spin_ice
+
+def calculate_energy(spin_ice, i, j):
+    """
+    Calcula la energía local en el sitio (i, j) según las reglas del hielo de spin.
+    """
+    # Suma los spins vecinos
+    neighbors = [
+        spin_ice[i - 1, j, 0] if i > 0 else 0,
+        spin_ice[i, j - 1, 1] if j > 0 else 0,
+        spin_ice[(i + 1) % spin_ice.shape[0], j, 0],
+        spin_ice[i, (j + 1) % spin_ice.shape[1], 1]
+    ]
+    return sum(neighbors)
+
+def flip_spin(spin_ice, i, j):
+    """
+    Realiza un flip en un sitio del spin.
+    """
+    spin_ice[i, j, 0] *= -1
+    spin_ice[i, j, 1] *= -1
+    return spin_ice
+
+# Animación de los monopolos magnéticos en el hielo de spin
+def animate_spin_ice(spin_ice, steps, interval=200):
+    """
+    Crea una animación del movimiento de monopolos magnéticos en el hielo de spin.
+    """
+    grid_size = spin_ice.shape[0]
+    fig, ax = plt.subplots(figsize=(6, 6))
+    monopole_positions = []
+    
+    # Inicializa la gráfica
+    quiver = ax.quiver(
+        np.arange(grid_size), np.arange(grid_size),
+        spin_ice[:, :, 0], spin_ice[:, :, 1],
+        color="blue", angles="xy", scale_units="xy", scale=1
+    )
+    scatter, = ax.plot([], [], "ro", label="Monopoles")
+    
+    def update(frame):
+        nonlocal spin_ice
+        i, j = np.random.randint(0, grid_size, size=2)  # Elige un sitio aleatorio
+        energy_before = calculate_energy(spin_ice, i, j)
+        spin_ice = flip_spin(spin_ice, i, j)
+        energy_after = calculate_energy(spin_ice, i, j)
+
+        # Si la energía aumenta, revierte el flip con probabilidad 0.5 (aceptación Monte Carlo)
+        if energy_after > energy_before and random.random() > 0.5:
+            spin_ice = flip_spin(spin_ice, i, j)
+        else:
+            monopole_positions.append((i, j))
+        
+        # Actualiza la gráfica
+        quiver.set_UVC(spin_ice[:, :, 0], spin_ice[:, :, 1])
+        if monopole_positions:
+            x, y = zip(*monopole_positions)
+            scatter.set_data(y, x)
+        return quiver, scatter
+
+    ax.set_title("Movimiento de Monopolos en Hielo de Spin")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_xlim(-0.5, grid_size - 0.5)
+    ax.set_ylim(-0.5, grid_size - 0.5)
+    ax.legend()
+    ax.grid(True)
+
+    ani = animation.FuncAnimation(fig, update, frames=steps, interval=interval, blit=True)
+    plt.close(fig)  # Cierra la figura para no mostrarla estática
+    return ani
+
+# Parámetros de la simulación
+grid_size = 10  # Tamaño de la red
+steps = 50  # Pasos de la animación
+
+# Ejecución del modelo y creación de la animación
+spin_ice = initialize_spin_ice(grid_size)
+ani = animate_spin_ice(spin_ice, steps)
+
+# Guardar la animación como archivo MP4
+ani.save("movimiento_monopolos.gif", writer="pillow")
