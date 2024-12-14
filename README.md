@@ -19,3 +19,11 @@ instalarlos con el siguiente comando:
 
 ```bash
 pip install numpy matplotlib pillow
+
+
+## Descargar el archivo .ipynb y correrlo en el ambiente de preferencia
+## También se incluyó el código en un archivo aparte para solo copiarlo y pegarlo y correrlo directamente
+
+El codigo como tal genera una animación que representa el cambio de orientación de los espines en la red y mediante la aplicación de las reglas de spin calcula la carga magnética neta en cada vertice de la red
+
+
